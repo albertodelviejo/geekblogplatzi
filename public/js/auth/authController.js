@@ -2,7 +2,7 @@ $(() => {
 
     const objAuth = new Autenticacion();
 
-    //$("#authFB").click(() => );
+    $("#authFB").click(() => objAuth.authCuentaFacebook());
 
     $("#btnRegistroEmail").click(() => {
         const nombres = $('#nombreContactoReg').val();
