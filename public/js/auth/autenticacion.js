@@ -1,9 +1,16 @@
 class Autenticacion {
   autEmailPass (email, password) {
-    //$('#avatar').attr('src', 'imagenes/usuario_auth.png')
-    //Materialize.toast(`Bienvenido ${result.user.displayName}`, 5000)
-    //$('.modal').modal('close')
-   
+    firebase.auth().signInWithEmailAndPassword(email,password)
+    .then(result => {
+      if(result.user.emailVerified){
+        Materialize.toast(`Bienvenido ${result.user.displayName}`, 5000)
+        $('#avatar').attr('src', 'imagenes/usuario_auth.png')
+      }else{
+        firebase.signOut()
+        Materialize.toast(`Por favor, realize la verificación de la cuenta`, 5000)
+      }
+    })
+    $('.modal').modal('close')
   }
 
   crearCuentaEmailPass (email, password, nombres) {
@@ -14,7 +21,7 @@ class Autenticacion {
         })
 
         const configuracion = {
-          url : 'http://localhost:3000/'
+          url : 'https://blogeekplatzi-42241.web.app/'
         }
 
         result.user.sendEmailVerification(configuracion).catch(error => {
