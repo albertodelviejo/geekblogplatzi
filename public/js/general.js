@@ -2,18 +2,71 @@ $(() => {
   $('.tooltipped').tooltip({ delay: 50 })
   $('.modal').modal()
 
-  // TODO: Adicionar el service worker
-
   // Init Firebase nuevamente
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
   }
 
-  // TODO: Registrar LLave publica de messaging
+  //Adicionar el service worker
 
-  // TODO: Solicitar permisos para las notificaciones
+  navigator.serviceWorker.register('notificaciones-sw.js')
+  .then(registro => {
+    console.log('service worker registrado')
+    firebase.messaging().useServiceWorker(registro)
+  }).catch(error => {
+    console.error(`Error al registrar el service worker => ${error}`)
+  })
 
-  // TODO: Recibir las notificaciones cuando el usuario esta foreground
+  
+  //Registrar LLave publica de messaging
+  const messaging = firebase.messaging()
+  messaging.usePublicVapidKey(
+    'BOl0zNKtOKw0owe3sYQzSxE3Yu2qQ8vaJf9yuzr_eerghzMTl5MevON4fPWfToBiM8457sXEcq4y7UDlkjnJtNM'
+  )
+
+  //Solicitar permisos para las notificaciones
+
+  messaging.requestPermission()
+  .then(() => {
+    console.log("permiso otorgado")
+    return messaging.getToken()
+  }).then(token => {
+    const db = firebase.firestore()
+    db.settings({
+      timestampsInSnapshots: true
+    })
+    db.collection('tokens')
+    .doc(token)
+    .set({token: token}).catch(error => {
+      console.error(`Error al insertar el token en la BD => ${error}`)
+    })
+  })
+
+  //Obtener el token cuando se refresca
+  messaging.onTokenRefresh(() => {
+    messaging.getToken()
+    .then(token => {
+      console.log("token se ha renovado")
+      const db = firebase.firestore()
+    db.settings({
+      timestampsInSnapshots: true
+    })
+    db.collection('tokens')
+    .doc(token)
+    .set({token: token}).catch(error => {
+      console.error(`Error al insertar el token en la BD => ${error}`)
+    })
+    })
+  })
+
+  // Recibir las notificaciones cuando el usuario esta foreground
+
+  messaging.onMessage(payload => {
+    Materialize.toast(
+      `Ya tenemos un nuevo post. Revísalo, se llama ${payload.data.titulo}`,
+      6000
+    )
+  })
 
   // TODO: Recibir las notificaciones cuando el usuario esta background
 

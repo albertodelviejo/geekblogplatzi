@@ -24,7 +24,10 @@ class Post {
   }
 
   consultarTodosPost () {
-    this.db.collection('posts').onSnapshot(querySnapshot => {
+    this.db.collection('posts')
+    .orderBy('fecha','asc')
+    .orderBy('titulo', 'asc')
+    .onSnapshot(querySnapshot => {
         $('#posts').empty()
         if(querySnapshot.empty){
             $('#posts').append(this.obtenerTemplatePostVacio())
@@ -46,6 +49,7 @@ class Post {
 
   consultarPostxUsuario (emailUser) {
     this.db.collection('posts')
+    .orderBy('fecha', 'asc')
     .where('autor', '==', emailUser)
     .onSnapshot(querySnapshot => {
         $('#posts').empty()
@@ -66,6 +70,28 @@ class Post {
         }
     })
   }
+
+  subirImagenPost (file, uid){
+      const refStorage = firebase.storage().ref(`imgsPosts/${uid}/${file.name}`)
+      const task = refStorage.put(file)
+
+      task.on('state_changed', snapshot => {
+          const porcentaje = snapshot.bytesTransferred / snapshot.totalBytes * 100
+          $('.determinate').attr('style', `width: ${porcentaje}%`)
+      }, err => {
+          Materialize.toast(`Error subiendo archivo => ${err.message}`, 4000)
+      },
+      () => {
+          task.snapshot.ref.getDownloadURL().then(url => {
+              console.log(url)
+              sessionStorage.setItem('imgNewPost', url)
+          }).catch(err => {
+            Materialize.toast('Error obteniendo downloadURL => ${err.message}', 4000)
+          })
+      }
+      )
+
+      }
 
   obtenerTemplatePostVacio () {
     return `<article class="post">
